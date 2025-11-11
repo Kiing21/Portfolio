@@ -1,0 +1,177 @@
+/* ========== Global ========== */
+:root {
+  --bg: #f8f9fa;
+  --card-bg: #ffffff;
+  --text: #222;
+  --muted: #777;
+  --accent: #007bff;
+  --danger: #dc3545;
+  --secondary: #6c757d;
+  --border: #ddd;
+  --shadow: rgba(0,0,0,0.05);
+  --priority-low: #28a745;
+  --priority-medium: #ff9800;
+  --priority-high: #f44336;
+  --warning: #f59f00;
+  --success: #2f9e44;
+}
+
+body.dark {
+  --bg: #121212;
+  --card-bg: #1e1e1e;
+  --text: #f5f5f5;
+  --muted: #aaa;
+  --accent: #4dabf7;
+  --danger: #ff6b6b;
+  --secondary: #868e96;
+  --border: #2a2a2a;
+  --shadow: rgba(0,0,0,0.4);
+}
+
+/* Smooth theme transition */
+* { transition: background-color 0.25s, color 0.25s, border-color 0.25s; }
+
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  min-height: 100vh;
+  padding: 32px 0;
+}
+
+/* ========== Card ========== */
+.container { width: 100%; max-width: 720px; position: relative; }
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px var(--shadow);
+  border-radius: 12px;
+  padding: 20px;
+}
+h1 { text-align: center; margin-bottom: 16px; }
+
+/* ========== Row / Inputs ========== */
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+input[type="text"],
+input[type="date"],
+input[type="time"],
+select {
+  flex: 1;
+  min-width: 160px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--text);
+}
+input:focus, select:focus { border-color: var(--accent); outline: none; }
+
+/* ========== Buttons ========== */
+button { cursor: pointer; border: none; border-radius: 6px; padding: 8px 14px; font-weight: 500; }
+.btn { background: var(--accent); color: #fff; }
+.btn:hover { opacity: 0.9; }
+.btn.secondary { background: var(--secondary); color: #fff; }
+.btn.danger, .small.danger { background: var(--danger); color: #fff; }
+.small { font-size: 13px; padding: 6px 10px; }
+.btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+
+/* ========== Todo items ========== */
+.todo {
+  display: flex; justify-content: space-between; align-items: start;
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px; margin-top: 10px;
+}
+.checkbox { transform: scale(1.2); margin-right: 8px; cursor: pointer; }
+.text.done { text-decoration: line-through; opacity: 0.6; }
+.muted { color: var(--muted); }
+
+/* Inline edit input */
+.editInput {
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 8px;
+  width: 100%;
+}
+.editInput::placeholder { color: var(--muted); }
+
+/* Priority badge */
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; }
+.dot.low { background: var(--priority-low); }
+.dot.medium { background: var(--priority-medium); }
+.dot.high { background: var(--priority-high); }
+
+/* ========== Filters and Footer ========== */
+.filters { display: flex; justify-content: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.footer {
+  display: flex; justify-content: space-between; align-items: center;
+  border-top: 1px solid var(--border); margin-top: 20px; padding-top: 10px;
+}
+.empty { text-align: center; color: var(--muted); margin: 20px 0; }
+
+/* ========== Theme toggle ========== */
+/* Floating theme toggle */
+.theme-toggle-fixed {
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top));
+    right: calc(12px + env(safe-area-inset-right));
+    z-index: 1000;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    cursor: pointer;
+    user-select: none;
+    /* Background & border that work in light/dark */
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+    backdrop-filter: blur(6px);
+    font-size: 18px;
+}
+
+/* Dark mode tweak (you toggle .dark on <body>) */
+body.dark .theme-toggle-fixed {
+    background: rgba(20, 20, 20, 0.75);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #eee;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+}
+
+.theme-toggle-fixed:hover {
+    transform: translateY(-1px);
+}
+
+.theme-toggle-fixed:active {
+    transform: translateY(0);
+}
+
+
+/* ========== Snackbar (Undo / Reminders) ========== */
+.snackbar {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+  background: var(--card-bg); color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 16px var(--shadow);
+  border-radius: 10px; padding: 10px 12px; display: flex; gap: 12px; align-items: center;
+  z-index: 9999;
+}
+.snackbar .label { font-size: 14px; }
+.snackbar .action { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); }
+.snackbar .action:hover { background: var(--bg); }
+.snackbar .undo { color: var(--accent); border-color: var(--accent); }
+.snackbar .dismiss { color: var(--muted); }
