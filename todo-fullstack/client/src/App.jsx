@@ -4,14 +4,18 @@ import axios from 'axios';
 import './styles.css';
 
 const API = axios.create({
-    baseURL: import.meta?.env?.VITE_API_URL || 'http://localhost:4000/api',
+    baseURL: import.meta.env.VITE_API_URL
+        ? `${import.meta.env.VITE_API_URL}/api`
+        : "http://localhost:4000/api",
 });
+
 // Attach token to every request
 API.interceptors.request.use((config) => {
-    const t = localStorage.getItem('token');
+    const t = localStorage.getItem("token");
     if (t) config.headers.Authorization = `Bearer ${t}`;
     return config;
 });
+
 // Handle 401s globally -> logout
 let setAuthStateExternal = null;
 API.interceptors.response.use(
@@ -19,11 +23,14 @@ API.interceptors.response.use(
     (err) => {
         if (err?.response?.status === 401 && setAuthStateExternal) {
             setAuthStateExternal((s) => ({ ...s, token: null, user: null }));
-            localStorage.removeItem('token');
+            localStorage.removeItem("token");
         }
         return Promise.reject(err);
     }
 );
+
+export default API;
+
 
 /* ========== Snackbar (Undo / Reminders) ========== */
 function Snackbar({ message, onUndo, onClose, showUndo = true }) {

@@ -33,24 +33,30 @@ const JWT_EXPIRES = '7d';
 
 // ---------- Robust CORS allowlist (prevents crashes & logs clearly) ----------
 const ORIGINS = [
-    'http://localhost:5173',                 // Vite dev
-    process.env.FRONTEND_URL || null,        // e.g., https://your-client.vercel.app
+    'http://localhost:5173',
+    process.env.FRONTEND_URL,    // your Vercel URL
 ].filter(Boolean);
 
-console.log('🌐 CORS allowlist:', ORIGINS);
+console.log("🌐 Allowed Origins:", ORIGINS);
 
-app.use(cors({
-    origin(origin, callback) {
-        // Allow non-browser clients without Origin (curl/Postman)
-        if (!origin) return callback(null, true);
-        if (ORIGINS.includes(origin)) return callback(null, true);
-        return callback(new Error(`Not allowed by CORS: ${origin}`));
-    },
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-    optionsSuccessStatus: 204,
-}));
+app.use(
+    cors({
+        origin(origin, callback) {
+            // Allow REST clients without Origin header (mobile apps / curl / Postman)
+            if (!origin) return callback(null, true);
+
+            if (ORIGINS.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error("CORS blocked for: " + origin));
+            }
+        },
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+    })
+);
+
 
 // Convert CORS errors into JSON (instead of crashing)
 app.use((err, _req, res, next) => {
