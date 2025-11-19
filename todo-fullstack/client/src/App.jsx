@@ -29,8 +29,6 @@ API.interceptors.response.use(
     }
 );
 
-export default API;
-
 
 /* ========== Snackbar (Undo / Reminders) ========== */
 function Snackbar({ message, onUndo, onClose, showUndo = true }) {
