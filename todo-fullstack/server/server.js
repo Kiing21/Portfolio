@@ -33,8 +33,9 @@ const JWT_EXPIRES = '7d';
 
 // ---------- Robust CORS allowlist (prevents crashes & logs clearly) ----------
 const ORIGINS = [
-    'http://localhost:5173',
-    process.env.FRONTEND_URL,    // your Vercel URL
+    "http://localhost:5173",
+    "https://portfolio-sable-nine-56.vercel.app", // your stable Vercel URL
+    process.env.FRONTEND_URL || null,
 ].filter(Boolean);
 
 console.log("🌐 Allowed Origins:", ORIGINS);
