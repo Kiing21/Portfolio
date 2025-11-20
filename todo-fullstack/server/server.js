@@ -638,18 +638,42 @@ async function processDueReminders() {
 }
 
 // Local/dev cron: runs every minute while the container is alive
-cron.schedule('* * * * *', () => {
-    processDueReminders().catch(err =>
-        console.error('❌ Reminder cron failed:', err.message)
-    );
+//cron.schedule('* * * * *', () => {
+//    processDueReminders().catch(err =>
+//        console.error('❌ Reminder cron failed:', err.message)
+//    );
+//});
+
+// Manual trigger for reminders (used by Railway Cron)
+app.get('/api/reminders/check', async (req, res) => {
+    try {
+        const dueReminders = await all(
+            `SELECT t.id, t.text, t.reminder_at, t.user_id, u.email
+             FROM todos t
+             JOIN users u ON t.user_id = u.id
+             WHERE t.reminder_at IS NOT NULL
+               AND t.completed = 0
+               AND datetime(t.reminder_at) <= datetime('now','localtime')`
+        );
+
+        if (dueReminders.length === 0) {
+            return res.json({ ok: true, message: "No reminders due" });
+        }
+
+        for (const r of dueReminders) {
+            const pretty = new Date((r.reminder_at || '').replace(' ', 'T')).toLocaleString();
+            const msg = `🔔 Reminder: "${r.text}" is due at ${pretty}`;
+            await sendReminderMail(r.email, '⏰ Task Reminder', `${msg}\n\n— Your To-Do App`);
+            await run(`UPDATE todos SET reminder_at = NULL WHERE id = ?`, [r.id]);
+        }
+
+        return res.json({ ok: true, sent: dueReminders.length });
+    } catch (err) {
+        console.error("Reminder check failed:", err.message);
+        return res.status(500).json({ error: err.message });
+    }
 });
 
-
-// Manual / cron-trigger endpoint for Railway Cron or debugging
-app.get('/api/reminders/check', async (_req, res) => {
-    await processDueReminders();
-    res.json({ ok: true });
-});
 
 
 // ---------- Start server ----------
