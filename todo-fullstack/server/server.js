@@ -609,31 +609,48 @@ app.post('/api/backup/import', authenticateToken, async (req, res) => {
 
 // ---------- REMINDER SCHEDULER ----------
 // Checks every minute for reminders that are due now; emails user, then clears reminder_at
-cron.schedule('* * * * *', async () => {
+// ---------- REMINDER SCHEDULER (shared logic) ----------
+async function processDueReminders() {
     try {
         const dueReminders = await all(
             `SELECT t.id, t.text, t.reminder_at, t.user_id, u.email
-       FROM todos t
-       JOIN users u ON t.user_id = u.id
-       WHERE t.reminder_at IS NOT NULL
-         AND t.completed = 0
-         AND datetime(t.reminder_at) <= datetime('now','localtime')`
+             FROM todos t
+             JOIN users u ON t.user_id = u.id
+             WHERE t.reminder_at IS NOT NULL
+               AND t.completed = 0
+               AND datetime(t.reminder_at) <= datetime('now','localtime')`
         );
 
-        if (dueReminders.length > 0) {
-            console.log(`🔔 [${new Date().toLocaleTimeString()}] ${dueReminders.length} reminder(s) triggered:`);
-            for (const r of dueReminders) {
-                const pretty = new Date((r.reminder_at || '').replace(' ', 'T')).toLocaleString();
-                const msg = `🔔 Reminder: "${r.text}" is due at ${pretty}`;
-                console.log(`📬 Sending to ${r.email} → ${msg}`);
-                await sendReminderMail(r.email, '⏰ Task Reminder', `${msg}\n\n— Your To-Do App`);
-                await run(`UPDATE todos SET reminder_at = NULL WHERE id = ?`, [r.id]);
-            }
+        if (!dueReminders.length) return;
+
+        console.log(`🔔 [${new Date().toLocaleTimeString()}] ${dueReminders.length} reminder(s) triggered:`);
+
+        for (const r of dueReminders) {
+            const pretty = new Date((r.reminder_at || '').replace(' ', 'T')).toLocaleString();
+            const msg = `🔔 Reminder: "${r.text}" is due at ${pretty}`;
+            console.log(`📬 Sending to ${r.email} → ${msg}`);
+            await sendReminderMail(r.email, '⏰ Task Reminder', `${msg}\n\n— Your To-Do App`);
+            await run(`UPDATE todos SET reminder_at = NULL WHERE id = ?`, [r.id]);
         }
     } catch (err) {
-        console.error('❌ Reminder cron failed:', err.message);
+        console.error('❌ Reminder processing failed:', err.message);
     }
+}
+
+// Local/dev cron: runs every minute while the container is alive
+cron.schedule('* * * * *', () => {
+    processDueReminders().catch(err =>
+        console.error('❌ Reminder cron failed:', err.message)
+    );
 });
+
+
+// Manual / cron-trigger endpoint for Railway Cron or debugging
+app.get('/api/reminders/check', async (_req, res) => {
+    await processDueReminders();
+    res.json({ ok: true });
+});
+
 
 // ---------- Start server ----------
 app.listen(PORT, () => {
